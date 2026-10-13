@@ -1,0 +1,928 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Exaltle – PoE2 Price Guessing Game · Daily Puzzle &amp; Higher or Lower</title>
+<meta name="description" content="Exaltle is a daily PoE2 price guessing game: guess what a Path of Exile 2 item is worth, or play higher or lower. Real market prices from poe.ninja for every league. Unofficial fan project.">
+<meta name="theme-color" content="#0A0807">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="canonical" href="__SITE_URL__">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Exaltle">
+<meta property="og:title" content="Exaltle – PoE2 Price Guessing Game · Daily Puzzle &amp; Higher or Lower">
+<meta property="og:description" content="Guess today's Path of Exile 2 item price or play higher or lower. Real market prices from poe.ninja, every league, every day.">
+<meta property="og:url" content="__SITE_URL__">
+<meta property="og:image" content="__SITE_URL__og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Exaltle, the daily price guessing game for Path of Exile 2">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+/* Layout: eine schmale Spielsäule (max. 600 px) wie ein Händlerfenster im Spiel. Dunkel mit Absicht (eine Welt, ein Look),
+   Glut im Hintergrund, Gold nur für Rahmen und Aktionen, Tier-Farben nur für Preis-Feedback. Item-Bilder von GGG, eigene Icons als Rückfall. */
+:root{
+  color-scheme:dark;
+  --bg:#0A0807; --bg-2:#120E0B; --panel:#17120E; --panel-2:#1F1914; --well:#0C0A08;
+  --ink:#EDE4D3; --ink-2:#B9AD95; --ink-3:#857A66;
+  --gold:#C9A25B; --gold-hi:#F0D195; --gold-dim:#5E4B2B; --line:#352B1F; --line-2:#4A3C29;
+  --currency:#D8CBAE;
+  --t1:#FF7A3C; --t2:#E8C44E; --t3:#7FB2E0; --t4:#8FC48A; --t5:#8A8073;
+  --win:#62B97F; --hot:#E6B94F; --warm:#DB7B3C; --cold:#5F5A54; --bad:#D9584A;
+  --font-display:"Cinzel","Trajan Pro","Palatino Linotype",Georgia,serif;
+  --font-body:"Alegreya Sans","Segoe UI",system-ui,sans-serif;
+  --r:4px;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.45;-webkit-font-smoothing:antialiased;
+  background:radial-gradient(90% 55% at 50% -5%,#2a1a0e 0%,rgba(42,26,14,0) 70%),radial-gradient(60% 40% at 50% 110%,#1b0f08 0%,rgba(27,15,8,0) 70%),var(--bg)}
+#embers{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--gold-hi);outline-offset:2px}
+h1,h2,h3{margin:0;font-family:var(--font-display);font-weight:700;letter-spacing:.05em;text-wrap:balance}
+p{margin:0}
+.wrap{position:relative;z-index:1;max-width:600px;margin:0 auto;padding-inline:16px;padding-block:18px 48px;display:grid;gap:18px}
+.sr{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+
+/* Kopf */
+header{display:grid;gap:12px}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.icon-btn{width:44px;height:44px;display:grid;place-items:center;border-radius:50%;border:1px solid var(--line-2);background:var(--panel);color:var(--gold)}
+.icon-btn:hover{border-color:var(--gold)}
+.icon-btn svg{width:20px;height:20px}
+.brand{text-align:center;display:grid;gap:2px}
+.logo{font-family:var(--font-display);font-weight:800;font-size:clamp(30px,8vw,40px);letter-spacing:.1em;line-height:1;
+  background:linear-gradient(180deg,#FFF0C8 0%,#E2B865 45%,#9C7230 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 14px rgba(232,170,80,.25))}
+.tagline{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--ink-3);font-weight:700}
+@media (max-width:440px){ .tagline{letter-spacing:.12em;font-size:11px} }
+.orn{display:flex;align-items:center;gap:10px;color:var(--gold)}
+.orn::before,.orn::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--gold-dim) 30%,var(--gold) 100%)}
+.orn::after{transform:scaleX(-1)}
+.orn svg{width:16px;height:16px;flex:none}
+.modes{justify-self:center;display:flex;gap:2px;padding:3px;border:1px solid var(--line-2);border-radius:999px;background:var(--well)}
+.modes button{border:0;background:transparent;color:var(--ink-2);padding:8px 16px;border-radius:999px;font-weight:700;font-size:15px;min-height:40px}
+.modes button[aria-pressed="true"]{background:linear-gradient(#d9b56f,#a78140);color:#1b130a}
+
+/* Rahmen-Panel (eigene Gestaltung, an Spielfenster angelehnt) */
+.frame{position:relative;background:linear-gradient(180deg,var(--panel-2),var(--panel) 40%);border:1px solid var(--line-2);border-radius:var(--r);
+  box-shadow:0 0 0 1px #000,inset 0 1px 0 rgba(240,209,149,.06),0 18px 40px rgba(0,0,0,.55)}
+.frame::before{content:"";position:absolute;inset:5px;border:1px solid rgba(201,162,91,.16);border-radius:2px;pointer-events:none}
+.corner{position:absolute;width:14px;height:14px;border-color:var(--gold);border-style:solid;pointer-events:none}
+.corner.tl{top:-1px;left:-1px;border-width:2px 0 0 2px}.corner.tr{top:-1px;right:-1px;border-width:2px 2px 0 0}
+.corner.bl{bottom:-1px;left:-1px;border-width:0 0 2px 2px}.corner.br{bottom:-1px;right:-1px;border-width:0 2px 2px 0}
+.inner{padding:18px;display:grid;gap:16px}
+
+/* Item-Kopf */
+.item{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}
+.slot{width:92px;height:92px;display:grid;place-items:center;border:1px solid var(--line-2);border-radius:3px;
+  background:radial-gradient(circle at 50% 45%,rgba(255,200,120,.10),transparent 65%),
+    linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px) 0 0/23px 23px,
+    linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px) 0 0/23px 23px,var(--well);
+  box-shadow:inset 0 0 18px rgba(0,0,0,.8)}
+.slot svg{width:74px;height:74px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.7))}
+.item-meta{display:grid;gap:4px;min-width:0}
+.eyebrow{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3);font-weight:700}
+.item-name{font-family:var(--font-display);font-size:clamp(20px,5.4vw,25px);color:var(--currency);line-height:1.15}
+.item-type{font-size:15px;color:var(--ink-2)}
+
+/* Preisskala */
+.scale{display:grid;gap:6px}
+.track{position:relative;height:40px;border:1px solid var(--line-2);border-radius:3px;overflow:hidden;
+  background:linear-gradient(90deg,rgba(138,128,115,.10),rgba(143,196,138,.10) 30%,rgba(127,178,224,.10) 52%,rgba(232,196,78,.12) 74%,rgba(255,122,60,.16)),var(--well)}
+.band{position:absolute;top:0;bottom:0;background:rgba(240,209,149,.12);border-inline:1px solid var(--gold);transition:left .4s ease,width .4s ease}
+.mark{position:absolute;top:6px;bottom:6px;width:3px;border-radius:2px;transform:translateX(-50%)}
+.mark.real{width:4px;top:2px;bottom:2px;background:var(--gold-hi);box-shadow:0 0 10px var(--gold-hi)}
+.ticks{position:relative;height:16px;font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.ticks span{position:absolute;top:0;white-space:nowrap;transform:translateX(-50%)}
+.ticks span:first-child{transform:none}
+.cap{font-size:14px;color:var(--ink-2)}
+
+/* Eingabe */
+.ask{font-family:var(--font-display);font-size:18px;text-align:center;color:var(--ink)}
+form.guess{display:grid;gap:10px}
+.in-row{display:grid;grid-template-columns:1fr auto;gap:8px}
+.num{min-width:0;min-height:52px;padding:8px 14px;border-radius:var(--r);border:1px solid var(--gold-dim);background:var(--well);font-size:22px;
+  font-variant-numeric:tabular-nums;font-weight:700}
+.num:focus{border-color:var(--gold)}
+.unit{display:flex;border:1px solid var(--gold-dim);border-radius:var(--r);overflow:hidden}
+.unit button{border:0;background:var(--well);color:var(--ink-3);padding:0 14px;font-weight:700;min-height:52px;min-width:52px}
+.unit button[aria-pressed="true"]{background:var(--gold-dim);color:var(--gold-hi)}
+input[type=range]{width:100%;accent-color:var(--gold);height:28px;background:transparent}
+.btn{min-height:50px;padding:0 20px;border-radius:var(--r);border:1px solid #e8c47e;background:linear-gradient(#dcb874,#a57f3e);color:#1b130a;
+  font-weight:700;font-family:var(--font-display);letter-spacing:.06em;font-size:16px;box-shadow:0 2px 0 #4d3a1d,0 0 18px rgba(220,170,90,.12)}
+.btn:hover{filter:brightness(1.08)}
+.btn:active{transform:translateY(1px);box-shadow:0 1px 0 #4d3a1d}
+.btn:disabled{opacity:.4;cursor:not-allowed;filter:none}
+.btn.ghost{background:transparent;color:var(--gold-hi);border-color:var(--gold-dim);box-shadow:none}
+.btn.ghost:hover{border-color:var(--gold)}
+.btn.sm{min-height:40px;font-size:14px;padding:0 14px}
+.err{font-size:14px;color:var(--warm);min-height:1.2em}
+
+/* Versuche */
+.rows{display:grid;gap:6px}
+.row{display:grid;grid-template-columns:1.6em 1fr auto 1.6em;gap:10px;align-items:center;padding:9px 12px;border-radius:3px;background:var(--well);
+  border:1px solid var(--line);font-variant-numeric:tabular-nums;min-height:44px}
+.row .n{color:var(--ink-3);font-size:13px}
+.row .v{font-weight:700}
+.row.empty{opacity:.32}
+.row.new{animation:rowin .35s ease}
+@keyframes rowin{from{transform:translateY(-6px);opacity:0}to{transform:none;opacity:1}}
+.pill{font-size:13px;font-weight:700;padding:2px 10px;border-radius:999px;color:#15100b;white-space:nowrap}
+.pill.win{background:var(--win)}.pill.hot{background:var(--hot)}.pill.warm{background:var(--warm)}.pill.cold{background:var(--cold);color:var(--ink)}
+.arrow{width:1.6em;height:1.6em;display:grid;place-items:center;color:var(--gold-hi)}
+.arrow svg{width:18px;height:18px}
+
+/* Hinweise */
+.hint{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;border:1px solid var(--line-2);border-left:3px solid var(--gold);padding:10px 12px;
+  background:linear-gradient(90deg,rgba(201,162,91,.08),transparent);border-radius:3px}
+.hint b{font-family:var(--font-display);font-size:13px;letter-spacing:.08em;color:var(--gold)}
+.hint p{font-size:15px;color:var(--ink-2)}
+.meter{display:flex;gap:3px;align-items:flex-end;height:22px}
+.meter i{width:6px;border-radius:1px;background:var(--line-2)}
+.meter i.on{background:var(--gold)}
+.tierdot{width:18px;height:18px;border-radius:50%;background:currentColor;box-shadow:0 0 12px currentColor;margin-inline:6px}
+
+/* Ergebnis */
+.result{display:grid;gap:14px;justify-items:center;text-align:center}
+.verdict{font-family:var(--font-display);font-size:22px;color:var(--gold-hi)}
+.reveal{display:grid;gap:2px;justify-items:center}
+.reveal .label{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3);font-weight:700}
+.reveal .big{font-family:var(--font-display);font-size:clamp(30px,8vw,40px);font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
+.reveal .small{font-size:15px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.tierchip{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:700;padding:4px 12px;border-radius:999px;border:1px solid currentColor;background:rgba(0,0,0,.25)}
+.share{white-space:pre;font-family:var(--font-body);font-size:16px;line-height:1.35;background:var(--well);border:1px solid var(--line);padding:10px 14px;
+  border-radius:var(--r);text-align:left;max-width:100%;overflow-x:auto;margin:0}
+.btns{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.toast{font-size:14px;color:var(--win);min-height:1.2em}
+.next{font-size:14px;color:var(--ink-2)}
+.next b{font-variant-numeric:tabular-nums;color:var(--ink)}
+
+/* Statistik */
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;width:100%}
+.stat{display:grid;gap:2px;justify-items:center}
+.stat b{font-family:var(--font-display);font-size:24px;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--ink-3);text-align:center;line-height:1.2}
+.dist{display:grid;gap:4px;width:100%}
+.dist-row{display:grid;grid-template-columns:1.4em 1fr;gap:8px;align-items:center;font-size:13px;font-variant-numeric:tabular-nums}
+.dist-bar{height:20px;min-width:22px;border-radius:2px;background:var(--line-2);display:flex;justify-content:flex-end;align-items:center;padding-right:6px;font-weight:700;font-size:12px}
+.dist-bar.me{background:var(--gold);color:#1b130a}
+
+/* Höher oder tiefer */
+.hl-top{display:flex;justify-content:center;gap:22px;flex-wrap:wrap;color:var(--ink-2);font-size:14px;letter-spacing:.06em;text-transform:uppercase;font-weight:700}
+.hl-top b{display:block;text-align:center;font-family:var(--font-display);font-size:24px;color:var(--gold-hi);text-transform:none;letter-spacing:0;font-variant-numeric:tabular-nums}
+.duel{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:stretch}
+.vs{align-self:center;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-family:var(--font-display);font-weight:800;color:var(--gold);
+  border:1px solid var(--gold-dim);background:var(--well);font-size:15px}
+@media (max-width:480px){ .duel{grid-template-columns:1fr} .vs{justify-self:center;margin-block:-4px} }
+.card{display:grid;justify-items:center;text-align:center;gap:10px;padding:18px 14px}
+.card .item-name{font-size:19px}
+.card .price{font-family:var(--font-display);font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;min-height:1.3em}
+.card .price small{display:block;font-family:var(--font-body);font-size:13px;color:var(--ink-3);font-weight:400}
+.card .q{font-family:var(--font-display);font-size:30px;color:var(--gold-dim);line-height:1}
+.hl-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.flash-ok{animation:ok .6s ease}.flash-no{animation:no .45s ease}
+@keyframes ok{0%{box-shadow:0 0 0 0 var(--win)}40%{box-shadow:0 0 0 5px var(--win)}100%{box-shadow:0 0 0 0 transparent}}
+@keyframes no{0%,100%{transform:none}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+
+/* Erklärung */
+details.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
+details.panel>summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;font-family:var(--font-display);
+  color:var(--gold);letter-spacing:.06em;font-size:15px}
+details.panel>summary::-webkit-details-marker{display:none}
+details.panel>summary::after{content:"+";font-size:20px;color:var(--gold-dim)}
+details.panel[open]>summary::after{content:"–"}
+.panel-body{padding:0 16px 16px;display:grid;gap:10px;font-size:15px;color:var(--ink-2)}
+.legend{display:flex;flex-wrap:wrap;gap:6px}
+
+footer{font-size:13px;color:var(--ink-3);text-align:center;display:grid;gap:4px;max-width:52ch;justify-self:center}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- Ergänzungen für die fertige Seite ---------- */
+@font-face{font-family:"Cinzel";src:url(fonts/cinzel-700.woff2) format("woff2");font-weight:700;font-display:swap}
+@font-face{font-family:"Cinzel";src:url(fonts/cinzel-800.woff2) format("woff2");font-weight:800;font-display:swap}
+@font-face{font-family:"Alegreya Sans";src:url(fonts/alegreya-sans-400.woff2) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Alegreya Sans";src:url(fonts/alegreya-sans-500.woff2) format("woff2");font-weight:500;font-display:swap}
+@font-face{font-family:"Alegreya Sans";src:url(fonts/alegreya-sans-700.woff2) format("woff2");font-weight:700;font-display:swap}
+:root{--unique:#D4803F}
+h1.logo{margin:0}
+.item-name.unique{color:var(--unique)}
+.slot img{display:block;max-width:80px;max-height:80px;width:auto;height:auto;object-fit:contain;filter:drop-shadow(0 4px 8px rgba(0,0,0,.7))}
+.selects{display:flex;align-items:center;justify-content:center;gap:10px 18px;flex-wrap:wrap}
+.field{display:flex;align-items:center;gap:8px;min-width:0;max-width:100%}
+.field label{font-size:12px;letter-spacing:.2em;text-transform:uppercase;font-weight:700;color:var(--ink-3)}
+.select{appearance:none;-webkit-appearance:none;min-height:40px;padding:6px 36px 6px 14px;border-radius:999px;border:1px solid var(--gold-dim);
+  background:var(--well) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23C9A25B' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center/16px;
+  color:var(--gold-hi);font:inherit;font-weight:700;max-width:100%;cursor:pointer}
+.select:hover{border-color:var(--gold)}
+.select:disabled{opacity:.6;cursor:wait}
+.select option{background:#17120E;color:#EDE4D3}
+.stamp{font-size:13px;color:var(--ink-3);font-variant-numeric:tabular-nums;text-align:center;margin:-4px 0 0;min-height:1.2em}
+.thinking{display:inline-flex;align-items:center;gap:10px;color:var(--ink-2);justify-self:center}
+.thinking::before{content:"";width:16px;height:16px;border-radius:50%;border:2px solid var(--line-2);border-top-color:var(--gold);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.notice{border:1px solid var(--line-2);border-radius:var(--r);padding:12px 14px;background:var(--well);color:var(--ink-2);font-size:15px;text-align:center}
+footer .links{display:flex;justify-content:center;gap:8px}
+footer a{color:var(--gold);text-underline-offset:3px}
+footer a:hover{color:var(--gold-hi)}
+@media (max-width:440px){ .tagline{letter-spacing:.06em;font-size:10.5px;white-space:nowrap} .bar{gap:6px} }
+
+@font-face{font-family:"Alegreya Sans";src:url(fonts/alegreya-sans-cyrillic-400.woff2) format("woff2");font-weight:400;font-display:swap;unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:"Alegreya Sans";src:url(fonts/alegreya-sans-cyrillic-700.woff2) format("woff2");font-weight:700;font-display:swap;unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+</style>
+</head>
+<body>
+<canvas id="embers" aria-hidden="true"></canvas>
+<div class="wrap">
+  <header>
+    <div class="bar">
+      <button class="icon-btn" id="help-btn" data-i18n-aria="howTo" aria-label="How it works" title="How it works"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.3-.9.8-.9 1.4V14"/><circle cx="12" cy="17.3" r=".6" fill="currentColor"/></svg></button>
+      <div class="brand"><h1 class="logo">Exaltle</h1><div class="tagline" data-i18n="tagline">Trading puzzle · Path of Exile 2</div></div>
+      <span style="width:44px;flex:none" aria-hidden="true"></span>
+    </div>
+    <div class="orn" aria-hidden="true"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0l2.2 5.8L16 8l-5.8 2.2L8 16l-2.2-5.8L0 8l5.8-2.2z"/></svg></div>
+    <div class="selects">
+      <div class="field"><label for="league" data-i18n="league">League</label><select id="league" class="select" disabled><option>…</option></select></div>
+      <div class="field"><label for="lang" data-i18n="language">Language</label><select id="lang" class="select lang"></select></div>
+    </div>
+    <p class="stamp" id="stamp"></p>
+    <div class="modes" role="group" data-i18n-aria="gameMode" aria-label="Game mode">
+      <button id="m-daily" aria-pressed="true" data-i18n="daily">Daily puzzle</button>
+      <button id="m-hl" aria-pressed="false" data-i18n="hl">Higher or lower</button>
+    </div>
+  </header>
+
+  <main id="main"><section class="frame"><div class="inner"><span class="thinking" data-i18n="loading">Loading prices …</span></div></section></main>
+
+  <details class="panel" id="help">
+    <summary data-i18n="howTo">How it works</summary>
+    <div class="panel-body">
+      <p data-i18n-html="helpDaily"><b>Daily puzzle:</b> One item per day, the same for everyone in a league. Guess its current trade price in Exalted or Divine Orbs. You have 6 tries.</p>
+      <div class="legend"><span class="pill win" data-i18n="pillHit">Hit ±20 %</span><span class="pill hot" data-i18n="pillHot">hot ≤ 2×</span><span class="pill warm" data-i18n="pillWarm">warm ≤ 5×</span><span class="pill cold" data-i18n="pillCold">cold</span></div>
+      <p data-i18n-html="helpHl"><b>Higher or lower:</b> Is the second item worth more or less than the first one?</p>
+      <p data-i18n-html="helpLeague"><b>League:</b> Choose at the top which league the prices come from.</p>
+    </div>
+  </details>
+
+  <footer>
+    <span id="src">Prices: poe.ninja</span>
+    <span data-i18n="fan">Unofficial fan project. Item names and images © Grinding Gear Games. Path of Exile is a trademark of Grinding Gear Games.</span>
+    <span lang="en">This product isn't affiliated with or endorsed by Grinding Gear Games in any way.</span>
+    <span data-i18n="privacyLine">Your progress stays in your browser. No cookies, no ads, no tracking.</span>
+    <nav class="links"><a href="impressum.html" data-i18n="legal">Legal notice</a><span aria-hidden="true">·</span><a href="datenschutz.html" data-i18n="privacy">Privacy</a></nav>
+  </footer>
+</div>
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ---------- Speicher (nur im Browser) ----------
+const LS = 'exaltle-v1';
+function load() { try { return JSON.parse(localStorage.getItem(LS)) || {}; } catch { return {}; } }
+const store = Object.assign({ league: null, lang: null, days: {}, best: {} }, load());
+if (!store.best || typeof store.best !== 'object') store.best = {};
+function save() { try { localStorage.setItem(LS, JSON.stringify(store)); } catch {} }
+
+// ---------- Übersetzungen ----------
+// Item-Namen kommen von poe.ninja (Englisch) und bleiben englisch, genau wie Exalted/Divine.
+const LANGS = { en: 'English', de: 'Deutsch', es: 'Español', fr: 'Français', pt: 'Português', ru: 'Русский' };
+const LOCALE = { en: 'en-US', de: 'de-AT', es: 'es-ES', fr: 'fr-FR', pt: 'pt-BR', ru: 'ru-RU' };
+const I18N = {
+  en: {
+    tagline: 'Trading puzzle · Path of Exile 2', howTo: 'How it works', league: 'League', language: 'Language', gameMode: 'Game mode',
+    daily: 'Daily puzzle', hl: 'Higher or lower', loading: 'Loading prices …', loadingLeague: 'Loading prices for this league …',
+    helpDaily: '<b>Daily puzzle:</b> One item per day, the same for everyone in a league. It can be a currency, a trade good or a unique. Guess its current trade price in Exalted or Divine Orbs. You have 6 tries. After each guess you see whether the real price is higher or lower and how close you were. Within 20 % counts as a hit. A new item arrives every day at midnight UTC.',
+    helpHl: '<b>Higher or lower:</b> Is the second item worth more or less than the first one? Keep going until you\'re wrong.',
+    helpLeague: '<b>League:</b> Choose at the top which league the prices come from. Each league has its own daily puzzle.',
+    pillHit: 'Hit ±20 %', pillHot: 'hot ≤ 2×', pillWarm: 'warm ≤ 5×', pillCold: 'cold',
+    fit: { win: 'Hit', hot: 'hot', warm: 'warm', cold: 'cold' },
+    src: 'Prices: poe.ninja · League {l} · 1 Divine ≈ {n} Exalted',
+    fan: 'Unofficial fan project. Item names and images © Grinding Gear Games. Path of Exile is a trademark of Grinding Gear Games.',
+    privacyLine: 'Your progress stays in your browser. No cookies, no ads, no tracking.', legal: 'Legal notice', privacy: 'Privacy',
+    stamp: 'Updated {t}', practice: 'Practice round', dailyNo: 'Daily puzzle #{n}', ask: 'What is this worth right now?',
+    price: 'Price', placeholder: 'e.g. 150', unit: 'Unit', slider: 'Price slider', guessBtn: 'Guess · {n}/{m}',
+    errNum: 'Enter a price above 0, e.g. 150 or 2.5. You can also use the slider.',
+    range: 'Possible range: {lo} to {hi}', scale: 'Price scale', higher: 'real price is higher', lower: 'real price is lower', correct: 'correct',
+    hintVol: 'Hint 1 · Trade volume', hintList: 'Hint 1 · Listings', hintTier: 'Hint 2 · Price tier',
+    vol: ['low, a niche item', 'medium', 'decent', 'high', 'very high, traded constantly'],
+    tierLine: 'Tier {t} of 5 · {name}: {range}', tierChip: 'Tier {t} · {name}',
+    tierNames: ['Legendary', 'Valuable', 'Good', 'Useful', 'Trinkets'],
+    tierRanges: ['from 20 Divine', '1 to 20 Divine', '100 Exalted to 1 Divine', '10 to 100 Exalted', 'under 10 Exalted'],
+    verdict1: 'First try. True trader!', verdictN: 'Solved in {n} of {m}', verdictX: 'Not this time', actual: 'Actual price',
+    copy: 'Copy result', copied: 'Copied. Share it on Discord or Reddit!', copyFail: 'Couldn\'t copy automatically. The text is selected, copy it with Ctrl+C or a long press.',
+    nextIn: 'Next item in {t}', preparing: 'The next puzzle is being prepared. Check back in a moment.',
+    played: 'played', solvedPct: '% solved', streak: 'Streak', bestStreak: 'best streak', dist: 'Distribution of your guesses',
+    noDaily: 'There\'s no daily puzzle for this league today. Enjoy a practice round!',
+    best: 'Best', more: 'Worth more', less: 'Worth less', question: 'Is {name} worth more or less?', hidden: 'Price hidden',
+    over: 'Streak ended: {n}', cmpMore: '{b} is worth more than {a}.', cmpLess: '{b} is worth less than {a}.', newRound: 'New round',
+    shareNo: 'Exaltle #{n}', sharePractice: 'Exaltle · Practice',
+    errLeague: 'Prices for this league couldn\'t be loaded right now.', errNoPrices: 'There are no prices for this league yet.',
+    errLoad: 'The price data couldn\'t be loaded. Try again in a few minutes.', errEmpty: 'No price data available yet.', retry: 'Try again',
+    cat: { Currency: 'Currency', Fragments: 'Fragment', UncutGems: 'Uncut gem', LineageSupportGems: 'Lineage support gem', Essences: 'Essence', Idols: 'Idol', Runes: 'Rune',
+      UniqueWeapons: 'Unique weapon', UniqueArmours: 'Unique armour', UniqueAccessories: 'Unique accessory', UniqueFlasks: 'Unique flask', UniqueCharms: 'Unique charm', UniqueJewels: 'Unique jewel' },
+  },
+  de: {
+    tagline: 'Handelsrätsel · Path of Exile 2', howTo: 'So funktioniert\'s', league: 'Liga', language: 'Sprache', gameMode: 'Spielmodus',
+    daily: 'Tagesrätsel', hl: 'Höher oder tiefer', loading: 'Preise werden geladen …', loadingLeague: 'Preise für diese Liga werden geladen …',
+    helpDaily: '<b>Tagesrätsel:</b> Jeden Tag ein Item, für alle in derselben Liga gleich. Das kann eine Währung, ein Handelsgut oder ein Unique sein. Schätze seinen aktuellen Handelspreis in Exalted oder Divine Orbs, du hast 6 Versuche. Nach jedem Tipp siehst du, ob der echte Preis höher oder tiefer liegt und wie nah du warst. Innerhalb von 20 % zählt als Treffer. Ein neues Item gibt es jeden Tag um Mitternacht (UTC).',
+    helpHl: '<b>Höher oder tiefer:</b> Ist das zweite Item mehr oder weniger wert als das erste? Spiel, bis du falsch liegst.',
+    helpLeague: '<b>Liga:</b> Oben wählst du, aus welcher Liga die Preise stammen. Jede Liga hat ihr eigenes Tagesrätsel.',
+    pillHit: 'Treffer ±20 %', pillHot: 'heiß ≤ 2×', pillWarm: 'warm ≤ 5×', pillCold: 'kalt',
+    fit: { win: 'Treffer', hot: 'heiß', warm: 'warm', cold: 'kalt' },
+    src: 'Preise: poe.ninja · Liga {l} · 1 Divine ≈ {n} Exalted',
+    fan: 'Inoffizielles Fan-Projekt. Item-Namen und -Bilder © Grinding Gear Games. Path of Exile ist eine Marke von Grinding Gear Games.',
+    privacyLine: 'Dein Spielstand bleibt in deinem Browser. Keine Cookies, keine Werbung, kein Tracking.', legal: 'Impressum', privacy: 'Datenschutz',
+    stamp: 'Stand {t}', practice: 'Übungsrunde', dailyNo: 'Tagesrätsel Nr. {n}', ask: 'Was ist das gerade wert?',
+    price: 'Preis', placeholder: 'z. B. 150', unit: 'Einheit', slider: 'Preis per Schieberegler', guessBtn: 'Schätzen · {n}/{m}',
+    errNum: 'Gib einen Preis größer als 0 ein, z. B. 150 oder 2,5. Du kannst auch den Regler benutzen.',
+    range: 'Möglicher Bereich: {lo} bis {hi}', scale: 'Preisskala', higher: 'echter Preis ist höher', lower: 'echter Preis ist tiefer', correct: 'richtig',
+    hintVol: 'Hinweis 1 · Handelsvolumen', hintList: 'Hinweis 1 · Angebote', hintTier: 'Hinweis 2 · Preisstufe',
+    vol: ['niedrig, eher ein Nischen-Item', 'mittel', 'ordentlich', 'hoch', 'sehr hoch, wird ständig gehandelt'],
+    tierLine: 'Stufe {t} von 5 · {name}: {range}', tierChip: 'Stufe {t} · {name}',
+    tierNames: ['Legendär', 'Wertvoll', 'Gut', 'Brauchbar', 'Kleinkram'],
+    tierRanges: ['ab 20 Divine', '1 bis 20 Divine', '100 Exalted bis 1 Divine', '10 bis 100 Exalted', 'unter 10 Exalted'],
+    verdict1: 'Auf Anhieb. Echter Händler!', verdictN: 'Gelöst in {n} von {m}', verdictX: 'Diesmal nicht', actual: 'Echter Preis',
+    copy: 'Ergebnis kopieren', copied: 'Kopiert. Ab damit in Discord oder Reddit!', copyFail: 'Automatisches Kopieren ging nicht. Der Text ist markiert, kopier ihn mit Strg+C oder lange tippen.',
+    nextIn: 'Nächstes Item in {t}', preparing: 'Das nächste Rätsel wird gerade vorbereitet. Schau gleich nochmal vorbei.',
+    played: 'gespielt', solvedPct: '% gelöst', streak: 'Serie', bestStreak: 'beste Serie', dist: 'Verteilung deiner Versuche',
+    noDaily: 'Für diese Liga gibt es heute kein Tagesrätsel. Viel Spaß mit einer Übungsrunde!',
+    best: 'Rekord', more: 'Mehr wert', less: 'Weniger wert', question: 'Ist {name} mehr oder weniger wert?', hidden: 'Preis verdeckt',
+    over: 'Serie beendet: {n}', cmpMore: '{b} ist mehr wert als {a}.', cmpLess: '{b} ist weniger wert als {a}.', newRound: 'Neue Runde',
+    shareNo: 'Exaltle Nr. {n}', sharePractice: 'Exaltle · Übung',
+    errLeague: 'Die Preise für diese Liga konnten gerade nicht geladen werden.', errNoPrices: 'Für diese Liga gibt es noch keine Preise.',
+    errLoad: 'Die Preisdaten konnten nicht geladen werden. Versuch es in ein paar Minuten nochmal.', errEmpty: 'Es sind noch keine Preisdaten vorhanden.', retry: 'Nochmal versuchen',
+    cat: { Currency: 'Währung', Fragments: 'Fragment', UncutGems: 'Ungeschliffene Gemme', LineageSupportGems: 'Lineage-Support-Gemme', Essences: 'Essenz', Idols: 'Idol', Runes: 'Rune',
+      UniqueWeapons: 'Unique-Waffe', UniqueArmours: 'Unique-Rüstung', UniqueAccessories: 'Unique-Schmuck', UniqueFlasks: 'Unique-Flask', UniqueCharms: 'Unique-Charm', UniqueJewels: 'Unique-Juwel' },
+  },
+  es: {
+    tagline: 'Acertijo de comercio · Path of Exile 2', howTo: 'Cómo funciona', league: 'Liga', language: 'Idioma', gameMode: 'Modo de juego',
+    daily: 'Reto diario', hl: '¿Más o menos?', loading: 'Cargando precios …', loadingLeague: 'Cargando precios de esta liga …',
+    helpDaily: '<b>Reto diario:</b> Un objeto al día, el mismo para todos en una liga. Puede ser una moneda, un bien comerciable o un único. Adivina su precio actual en Exalted o Divine Orbs. Tienes 6 intentos. Tras cada intento verás si el precio real es mayor o menor y lo cerca que estuviste. A menos de un 20 % cuenta como acierto. Cada día a medianoche (UTC) llega un objeto nuevo.',
+    helpHl: '<b>¿Más o menos?:</b> ¿El segundo objeto vale más o menos que el primero? Sigue hasta que falles.',
+    helpLeague: '<b>Liga:</b> Arriba eliges de qué liga vienen los precios. Cada liga tiene su propio reto diario.',
+    pillHit: 'Acierto ±20 %', pillHot: 'caliente ≤ 2×', pillWarm: 'templado ≤ 5×', pillCold: 'frío',
+    fit: { win: 'Acierto', hot: 'caliente', warm: 'templado', cold: 'frío' },
+    src: 'Precios: poe.ninja · Liga {l} · 1 Divine ≈ {n} Exalted',
+    fan: 'Proyecto no oficial de fans. Nombres e imágenes de objetos © Grinding Gear Games. Path of Exile es una marca de Grinding Gear Games.',
+    privacyLine: 'Tu progreso se queda en tu navegador. Sin cookies, sin anuncios, sin seguimiento.', legal: 'Aviso legal', privacy: 'Privacidad',
+    stamp: 'Actualizado {t}', practice: 'Ronda de práctica', dailyNo: 'Reto diario n.º {n}', ask: '¿Cuánto vale ahora mismo?',
+    price: 'Precio', placeholder: 'p. ej. 150', unit: 'Unidad', slider: 'Control deslizante de precio', guessBtn: 'Adivinar · {n}/{m}',
+    errNum: 'Escribe un precio mayor que 0, p. ej. 150 o 2,5. También puedes usar el control deslizante.',
+    range: 'Rango posible: de {lo} a {hi}', scale: 'Escala de precios', higher: 'el precio real es mayor', lower: 'el precio real es menor', correct: 'correcto',
+    hintVol: 'Pista 1 · Volumen de comercio', hintList: 'Pista 1 · Ofertas', hintTier: 'Pista 2 · Nivel de precio',
+    vol: ['bajo, un objeto de nicho', 'medio', 'considerable', 'alto', 'muy alto, se comercia constantemente'],
+    tierLine: 'Nivel {t} de 5 · {name}: {range}', tierChip: 'Nivel {t} · {name}',
+    tierNames: ['Legendario', 'Valioso', 'Bueno', 'Útil', 'Baratija'],
+    tierRanges: ['desde 20 Divine', 'de 1 a 20 Divine', 'de 100 Exalted a 1 Divine', 'de 10 a 100 Exalted', 'menos de 10 Exalted'],
+    verdict1: '¡A la primera! Todo un mercader.', verdictN: 'Resuelto en {n} de {m}', verdictX: 'Esta vez no', actual: 'Precio real',
+    copy: 'Copiar resultado', copied: 'Copiado. ¡Compártelo en Discord o Reddit!', copyFail: 'No se pudo copiar automáticamente. El texto está seleccionado: cópialo con Ctrl+C o con una pulsación larga.',
+    nextIn: 'Próximo objeto en {t}', preparing: 'El próximo reto se está preparando. Vuelve en un momento.',
+    played: 'jugados', solvedPct: '% resueltos', streak: 'Racha', bestStreak: 'mejor racha', dist: 'Distribución de tus intentos',
+    noDaily: 'Hoy no hay reto diario para esta liga. ¡Disfruta de una ronda de práctica!',
+    best: 'Récord', more: 'Vale más', less: 'Vale menos', question: '¿{name} vale más o menos?', hidden: 'Precio oculto',
+    over: 'Racha terminada: {n}', cmpMore: '{b} vale más que {a}.', cmpLess: '{b} vale menos que {a}.', newRound: 'Nueva ronda',
+    shareNo: 'Exaltle n.º {n}', sharePractice: 'Exaltle · Práctica',
+    errLeague: 'No se pudieron cargar los precios de esta liga.', errNoPrices: 'Todavía no hay precios para esta liga.',
+    errLoad: 'No se pudieron cargar los datos de precios. Inténtalo de nuevo en unos minutos.', errEmpty: 'Aún no hay datos de precios.', retry: 'Reintentar',
+    cat: { Currency: 'Moneda', Fragments: 'Fragmento', UncutGems: 'Gema sin tallar', LineageSupportGems: 'Gema de soporte de linaje', Essences: 'Esencia', Idols: 'Ídolo', Runes: 'Runa',
+      UniqueWeapons: 'Arma única', UniqueArmours: 'Armadura única', UniqueAccessories: 'Accesorio único', UniqueFlasks: 'Frasco único', UniqueCharms: 'Talismán único', UniqueJewels: 'Joya única' },
+  },
+  fr: {
+    tagline: 'Énigme marchande · Path of Exile 2', howTo: 'Comment ça marche', league: 'Ligue', language: 'Langue', gameMode: 'Mode de jeu',
+    daily: 'Défi du jour', hl: 'Plus ou moins', loading: 'Chargement des prix …', loadingLeague: 'Chargement des prix de cette ligue …',
+    helpDaily: '<b>Défi du jour :</b> Un objet par jour, le même pour tous dans une ligue. Ce peut être une monnaie, une marchandise ou un unique. Estime son prix actuel en Exalted ou Divine Orbs. Tu as 6 essais. Après chaque essai, tu vois si le vrai prix est plus haut ou plus bas et à quel point tu étais proche. À moins de 20 %, c\'est gagné. Un nouvel objet arrive chaque jour à minuit (UTC).',
+    helpHl: '<b>Plus ou moins :</b> Le second objet vaut-il plus ou moins que le premier ? Continue jusqu\'à ta première erreur.',
+    helpLeague: '<b>Ligue :</b> En haut, choisis la ligue d\'où viennent les prix. Chaque ligue a son propre défi du jour.',
+    pillHit: 'Gagné ±20 %', pillHot: 'chaud ≤ 2×', pillWarm: 'tiède ≤ 5×', pillCold: 'froid',
+    fit: { win: 'Gagné', hot: 'chaud', warm: 'tiède', cold: 'froid' },
+    src: 'Prix : poe.ninja · Ligue {l} · 1 Divine ≈ {n} Exalted',
+    fan: 'Projet de fan non officiel. Noms et images des objets © Grinding Gear Games. Path of Exile est une marque de Grinding Gear Games.',
+    privacyLine: 'Ta progression reste dans ton navigateur. Pas de cookies, pas de pubs, pas de pistage.', legal: 'Mentions légales', privacy: 'Confidentialité',
+    stamp: 'Mis à jour {t}', practice: 'Partie d\'entraînement', dailyNo: 'Défi du jour n° {n}', ask: 'Combien ça vaut en ce moment ?',
+    price: 'Prix', placeholder: 'ex. 150', unit: 'Unité', slider: 'Curseur de prix', guessBtn: 'Estimer · {n}/{m}',
+    errNum: 'Saisis un prix supérieur à 0, par ex. 150 ou 2,5. Tu peux aussi utiliser le curseur.',
+    range: 'Fourchette possible : de {lo} à {hi}', scale: 'Échelle de prix', higher: 'le vrai prix est plus haut', lower: 'le vrai prix est plus bas', correct: 'juste',
+    hintVol: 'Indice 1 · Volume d\'échange', hintList: 'Indice 1 · Annonces', hintTier: 'Indice 2 · Palier de prix',
+    vol: ['faible, un objet de niche', 'moyen', 'correct', 'élevé', 'très élevé, échangé en permanence'],
+    tierLine: 'Palier {t} sur 5 · {name} : {range}', tierChip: 'Palier {t} · {name}',
+    tierNames: ['Légendaire', 'Précieux', 'Bon', 'Utile', 'Bricole'],
+    tierRanges: ['à partir de 20 Divine', 'de 1 à 20 Divine', 'de 100 Exalted à 1 Divine', 'de 10 à 100 Exalted', 'moins de 10 Exalted'],
+    verdict1: 'Du premier coup. Un vrai marchand !', verdictN: 'Trouvé en {n} sur {m}', verdictX: 'Pas cette fois', actual: 'Vrai prix',
+    copy: 'Copier le résultat', copied: 'Copié. Partage-le sur Discord ou Reddit !', copyFail: 'Copie automatique impossible. Le texte est sélectionné, copie-le avec Ctrl+C ou un appui long.',
+    nextIn: 'Prochain objet dans {t}', preparing: 'Le prochain défi est en préparation. Reviens dans un instant.',
+    played: 'parties', solvedPct: '% trouvés', streak: 'Série', bestStreak: 'meilleure série', dist: 'Répartition de tes essais',
+    noDaily: 'Pas de défi du jour pour cette ligue aujourd\'hui. Profite d\'une partie d\'entraînement !',
+    best: 'Record', more: 'Vaut plus', less: 'Vaut moins', question: '{name} vaut-il plus ou moins ?', hidden: 'Prix caché',
+    over: 'Série terminée : {n}', cmpMore: '{b} vaut plus que {a}.', cmpLess: '{b} vaut moins que {a}.', newRound: 'Nouvelle partie',
+    shareNo: 'Exaltle n° {n}', sharePractice: 'Exaltle · Entraînement',
+    errLeague: 'Impossible de charger les prix de cette ligue pour le moment.', errNoPrices: 'Pas encore de prix pour cette ligue.',
+    errLoad: 'Impossible de charger les prix. Réessaie dans quelques minutes.', errEmpty: 'Aucune donnée de prix pour l\'instant.', retry: 'Réessayer',
+    cat: { Currency: 'Monnaie', Fragments: 'Fragment', UncutGems: 'Gemme non taillée', LineageSupportGems: 'Gemme de soutien de lignée', Essences: 'Essence', Idols: 'Idole', Runes: 'Rune',
+      UniqueWeapons: 'Arme unique', UniqueArmours: 'Armure unique', UniqueAccessories: 'Accessoire unique', UniqueFlasks: 'Flacon unique', UniqueCharms: 'Charme unique', UniqueJewels: 'Joyau unique' },
+  },
+  pt: {
+    tagline: 'Desafio de preços · Path of Exile 2', howTo: 'Como funciona', league: 'Liga', language: 'Idioma', gameMode: 'Modo de jogo',
+    daily: 'Desafio diário', hl: 'Mais ou menos', loading: 'Carregando preços …', loadingLeague: 'Carregando preços desta liga …',
+    helpDaily: '<b>Desafio diário:</b> Um item por dia, o mesmo para todos na mesma liga. Pode ser uma moeda, um item de troca ou um único. Adivinhe o preço atual em Exalted ou Divine Orbs. Você tem 6 tentativas. Depois de cada palpite, você vê se o preço real é maior ou menor e o quão perto chegou. Até 20 % de diferença conta como acerto. Um novo item chega todo dia à meia-noite (UTC).',
+    helpHl: '<b>Mais ou menos:</b> O segundo item vale mais ou menos que o primeiro? Continue até errar.',
+    helpLeague: '<b>Liga:</b> No topo, escolha de qual liga vêm os preços. Cada liga tem seu próprio desafio diário.',
+    pillHit: 'Acerto ±20 %', pillHot: 'quente ≤ 2×', pillWarm: 'morno ≤ 5×', pillCold: 'frio',
+    fit: { win: 'Acerto', hot: 'quente', warm: 'morno', cold: 'frio' },
+    src: 'Preços: poe.ninja · Liga {l} · 1 Divine ≈ {n} Exalted',
+    fan: 'Projeto de fã não oficial. Nomes e imagens de itens © Grinding Gear Games. Path of Exile é uma marca registrada da Grinding Gear Games.',
+    privacyLine: 'Seu progresso fica no seu navegador. Sem cookies, sem anúncios, sem rastreamento.', legal: 'Aviso legal', privacy: 'Privacidade',
+    stamp: 'Atualizado {t}', practice: 'Rodada de treino', dailyNo: 'Desafio diário nº {n}', ask: 'Quanto isso vale agora?',
+    price: 'Preço', placeholder: 'ex.: 150', unit: 'Unidade', slider: 'Controle deslizante de preço', guessBtn: 'Chutar · {n}/{m}',
+    errNum: 'Digite um preço maior que 0, ex.: 150 ou 2,5. Você também pode usar o controle deslizante.',
+    range: 'Faixa possível: de {lo} a {hi}', scale: 'Escala de preços', higher: 'o preço real é maior', lower: 'o preço real é menor', correct: 'certo',
+    hintVol: 'Dica 1 · Volume de negociação', hintList: 'Dica 1 · Anúncios', hintTier: 'Dica 2 · Faixa de preço',
+    vol: ['baixo, um item de nicho', 'médio', 'razoável', 'alto', 'muito alto, negociado o tempo todo'],
+    tierLine: 'Faixa {t} de 5 · {name}: {range}', tierChip: 'Faixa {t} · {name}',
+    tierNames: ['Lendário', 'Valioso', 'Bom', 'Útil', 'Trocados'],
+    tierRanges: ['a partir de 20 Divine', 'de 1 a 20 Divine', 'de 100 Exalted a 1 Divine', 'de 10 a 100 Exalted', 'menos de 10 Exalted'],
+    verdict1: 'De primeira! Comerciante de verdade.', verdictN: 'Resolvido em {n} de {m}', verdictX: 'Não foi dessa vez', actual: 'Preço real',
+    copy: 'Copiar resultado', copied: 'Copiado. Compartilhe no Discord ou no Reddit!', copyFail: 'Não foi possível copiar automaticamente. O texto está selecionado, copie com Ctrl+C ou pressionando e segurando.',
+    nextIn: 'Próximo item em {t}', preparing: 'O próximo desafio está sendo preparado. Volte daqui a pouco.',
+    played: 'jogados', solvedPct: '% resolvidos', streak: 'Sequência', bestStreak: 'melhor sequência', dist: 'Distribuição das suas tentativas',
+    noDaily: 'Hoje não há desafio diário para esta liga. Aproveite uma rodada de treino!',
+    best: 'Recorde', more: 'Vale mais', less: 'Vale menos', question: '{name} vale mais ou menos?', hidden: 'Preço oculto',
+    over: 'Sequência encerrada: {n}', cmpMore: '{b} vale mais que {a}.', cmpLess: '{b} vale menos que {a}.', newRound: 'Nova rodada',
+    shareNo: 'Exaltle nº {n}', sharePractice: 'Exaltle · Treino',
+    errLeague: 'Não foi possível carregar os preços desta liga agora.', errNoPrices: 'Ainda não há preços para esta liga.',
+    errLoad: 'Não foi possível carregar os dados de preço. Tente novamente em alguns minutos.', errEmpty: 'Ainda não há dados de preço.', retry: 'Tentar de novo',
+    cat: { Currency: 'Moeda', Fragments: 'Fragmento', UncutGems: 'Gema não lapidada', LineageSupportGems: 'Gema de suporte de linhagem', Essences: 'Essência', Idols: 'Ídolo', Runes: 'Runa',
+      UniqueWeapons: 'Arma única', UniqueArmours: 'Armadura única', UniqueAccessories: 'Acessório único', UniqueFlasks: 'Frasco único', UniqueCharms: 'Talismã único', UniqueJewels: 'Joia única' },
+  },
+  ru: {
+    tagline: 'Торговая загадка · Path of Exile 2', howTo: 'Как играть', league: 'Лига', language: 'Язык', gameMode: 'Режим игры',
+    daily: 'Задание дня', hl: 'Дороже или дешевле', loading: 'Загрузка цен …', loadingLeague: 'Загрузка цен для этой лиги …',
+    helpDaily: '<b>Задание дня:</b> Один предмет в день, одинаковый для всех в лиге. Это может быть валюта, товар или уникальный предмет. Угадай его текущую цену в Exalted или Divine Orbs. У тебя 6 попыток. После каждой ты увидишь, выше или ниже настоящая цена и насколько ты был близко. Разница до 20 % засчитывается как попадание. Новый предмет появляется каждый день в полночь (UTC).',
+    helpHl: '<b>Дороже или дешевле:</b> Второй предмет стоит больше или меньше первого? Играй, пока не ошибёшься.',
+    helpLeague: '<b>Лига:</b> Вверху выбери, из какой лиги берутся цены. У каждой лиги своё задание дня.',
+    pillHit: 'Попадание ±20 %', pillHot: 'горячо ≤ 2×', pillWarm: 'тепло ≤ 5×', pillCold: 'холодно',
+    fit: { win: 'Точно', hot: 'горячо', warm: 'тепло', cold: 'холодно' },
+    src: 'Цены: poe.ninja · Лига {l} · 1 Divine ≈ {n} Exalted',
+    fan: 'Неофициальный фанатский проект. Названия и изображения предметов © Grinding Gear Games. Path of Exile — товарный знак Grinding Gear Games.',
+    privacyLine: 'Твой прогресс хранится только в браузере. Без cookies, рекламы и слежки.', legal: 'Правовая информация', privacy: 'Конфиденциальность',
+    stamp: 'Обновлено {t}', practice: 'Тренировка', dailyNo: 'Задание дня № {n}', ask: 'Сколько это стоит сейчас?',
+    price: 'Цена', placeholder: 'напр. 150', unit: 'Валюта', slider: 'Ползунок цены', guessBtn: 'Ответить · {n}/{m}',
+    errNum: 'Введи цену больше 0, например 150 или 2,5. Можно также использовать ползунок.',
+    range: 'Возможный диапазон: от {lo} до {hi}', scale: 'Шкала цен', higher: 'настоящая цена выше', lower: 'настоящая цена ниже', correct: 'верно',
+    hintVol: 'Подсказка 1 · Объём торгов', hintList: 'Подсказка 1 · Предложения', hintTier: 'Подсказка 2 · Ценовой уровень',
+    vol: ['низкий, нишевый предмет', 'средний', 'приличный', 'высокий', 'очень высокий, торгуется постоянно'],
+    tierLine: 'Уровень {t} из 5 · {name}: {range}', tierChip: 'Уровень {t} · {name}',
+    tierNames: ['Легендарный', 'Ценный', 'Хороший', 'Полезный', 'Мелочь'],
+    tierRanges: ['от 20 Divine', 'от 1 до 20 Divine', 'от 100 Exalted до 1 Divine', 'от 10 до 100 Exalted', 'меньше 10 Exalted'],
+    verdict1: 'С первой попытки. Настоящий торговец!', verdictN: 'Решено за {n} из {m}', verdictX: 'В этот раз нет', actual: 'Настоящая цена',
+    copy: 'Скопировать результат', copied: 'Скопировано. Делись в Discord или Reddit!', copyFail: 'Не удалось скопировать автоматически. Текст выделен — скопируй его через Ctrl+C или долгим нажатием.',
+    nextIn: 'Следующий предмет через {t}', preparing: 'Следующее задание готовится. Загляни чуть позже.',
+    played: 'сыграно', solvedPct: '% решено', streak: 'Серия', bestStreak: 'лучшая серия', dist: 'Распределение попыток',
+    noDaily: 'Сегодня для этой лиги нет задания дня. Попробуй тренировку!',
+    best: 'Рекорд', more: 'Дороже', less: 'Дешевле', question: '{name} стоит больше или меньше?', hidden: 'Цена скрыта',
+    over: 'Серия окончена: {n}', cmpMore: '{b} стоит больше, чем {a}.', cmpLess: '{b} стоит меньше, чем {a}.', newRound: 'Новый раунд',
+    shareNo: 'Exaltle № {n}', sharePractice: 'Exaltle · Тренировка',
+    errLeague: 'Не удалось загрузить цены для этой лиги.', errNoPrices: 'Для этой лиги пока нет цен.',
+    errLoad: 'Не удалось загрузить цены. Попробуй через несколько минут.', errEmpty: 'Данных о ценах пока нет.', retry: 'Повторить',
+    cat: { Currency: 'Валюта', Fragments: 'Фрагмент', UncutGems: 'Неогранённый камень', LineageSupportGems: 'Камень поддержки рода', Essences: 'Сущность', Idols: 'Идол', Runes: 'Руна',
+      UniqueWeapons: 'Уникальное оружие', UniqueArmours: 'Уникальная броня', UniqueAccessories: 'Уникальный аксессуар', UniqueFlasks: 'Уникальный флакон', UniqueCharms: 'Уникальный оберег', UniqueJewels: 'Уникальный самоцвет' },
+  },
+};
+
+
+// ---------- Sprache: gespeicherte Wahl, sonst Browsersprache, sonst Englisch ----------
+function detectLang() {
+  if (store.lang && I18N[store.lang]) return store.lang;
+  const prefs = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || 'en']);
+  for (const p of prefs) { const code = String(p).toLowerCase().split('-')[0]; if (I18N[code]) return code; }
+  return 'en';
+}
+let LANG = detectLang();
+const L = () => I18N[LANG];
+function t(key, vars) {
+  let s = L()[key]; if (s == null) s = I18N.en[key]; if (s == null) return key;
+  if (vars) s = s.replace(/\{(\w+)\}/g, (m, k) => vars[k] != null ? vars[k] : m);
+  return s;
+}
+const catName = c => (L().cat && L().cat[c]) || I18N.en.cat[c] || c;
+function applyStatic() {
+  document.documentElement.lang = LANG;
+  $$('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  $$('[data-i18n-html]').forEach(el => { el.innerHTML = t(el.dataset.i18nHtml); });
+  $$('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); if (el.title) el.title = t(el.dataset.i18nAria); });
+}
+const langSel = $('#lang');
+langSel.innerHTML = Object.entries(LANGS).map(([k, v]) => `<option value="${k}" lang="${k}">${esc(v)}</option>`).join('');
+langSel.value = LANG;
+langSel.onchange = () => { LANG = langSel.value; store.lang = LANG; save(); applyStatic(); if (D) { setData(D); rerender(); } };
+applyStatic();
+
+// ---------- Ligadaten ----------
+let D = null, EXD = 1, ITEMS = [], BYKEY = new Map(), POOL = [], PRACTICE = [], LEAGUES = null;
+const pad = n => String(n).padStart(2, '0');
+const utcKey = (d = new Date()) => d.toISOString().slice(0, 10);
+
+// ---------- Zahlen (Format je Sprache) ----------
+const nf = (v, d) => v.toLocaleString(LOCALE[LANG], { minimumFractionDigits: 0, maximumFractionDigits: d });
+const fmtEx = ex => ex < 1 ? nf(ex, 2) : ex < 100 ? nf(ex, 1) : nf(Math.round(ex), 0);
+const fmtDiv = d => d < 10 ? nf(d, 2) : nf(d, d < 100 ? 1 : 0);
+const fmtPrice = (ex, short) => ex >= EXD ? `${fmtDiv(ex / EXD)} ${short ? 'Div' : 'Divine'}` : `${fmtEx(ex)} ${short ? 'Ex' : 'Exalted'}`;
+const fmtAlt = ex => ex >= EXD ? `≈ ${fmtEx(ex)} Exalted` : ex / EXD < 0.01 ? `< ${nf(0.01, 2)} Divine` : `≈ ${fmtDiv(ex / EXD)} Divine`;
+const decSep = () => (1.5).toLocaleString(LOCALE[LANG]).charAt(1);
+// Versteht 1.500 / 1,500 / 2,5 / 2.5 je nach Sprache sinnvoll
+function parse(s) {
+  let r = String(s).trim().replace(/[\s  ']/g, '');
+  if (!r) return 0;
+  const dec = decSep(), other = dec === ',' ? '.' : ',';
+  if (r.includes(',') && r.includes('.')) {
+    const last = Math.max(r.lastIndexOf(','), r.lastIndexOf('.'));
+    r = r.slice(0, last).replace(/[.,]/g, '') + '.' + r.slice(last + 1);
+  } else if (r.includes(other)) {
+    r = /^\d{1,3}([.,]\d{3})+$/.test(r) ? r.replace(/[.,]/g, '') : r.replace(other, '.');
+  } else r = r.replace(dec, '.');
+  const v = parseFloat(r);
+  return isFinite(v) && v > 0 ? v : 0;
+}
+
+// ---------- Preisstufen ----------
+const TIER_COL = [null, 'var(--t1)', 'var(--t2)', 'var(--t3)', 'var(--t4)', 'var(--t5)'];
+const tierName = n => L().tierNames[n - 1];
+const tierRange = n => L().tierRanges[n - 1];
+const tierOf = ex => ex >= 20 * EXD ? 1 : ex >= EXD ? 2 : ex >= 100 ? 3 : ex >= 10 ? 4 : 5;
+
+const HUES = [['chaos',125],['exalted',42],['divine',48],['regal',218],['alch',32],['aug',196],['transmut',206],['annul',0],['chance',28],
+  ['vaal',2],['jewel',176],['architect',275],['fractur',190],['extraction',305],['artificer',24],['sacrifice',14],['gcp',160],['infuser',290],
+  ['key',45],['lock',38],['mirror',200],['scrap',30],['whetstone',210],['bauble',185],['corruption',335],['etcher',20],['wisdom',40],['destabil',260],['siphon',350],['shard',30],['cultivation',95]];
+const hueOf = it => { for (const [k, h] of HUES) if (it.k.includes(k) || it.n.toLowerCase().includes(k)) return h; let h = 0; for (const c of it.k) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h % 360; };
+const GLYPH = {
+  star: 'M32 21.5l3 7.2 7.6.6-5.8 5 1.8 7.4L32 37.8l-6.6 3.9 1.8-7.4-5.8-5 7.6-.6z',
+  plus: 'M32 23v18M23 32h18', tri: 'M32 22.5l9.5 16.5h-19z', crown: 'M22.5 39l2-13 7.5 6.5 7.5-6.5 2 13z',
+  spiral: 'M32 32m-1.5 0a1.5 1.5 0 1 1 3 0a4 4 0 1 1 -7 -2.5a6.5 6.5 0 1 1 11.5 5.5',
+  slash: 'M24 32a8 8 0 1 0 16 0a8 8 0 1 0 -16 0M26.5 37.5l11-11', crack: 'M28 21.5l5 8-4.5 4 6 8.5', arrows: 'M23 28.5h15l-4-4M41 35.5H26l4 4',
+  hex: 'M32 22.5l8.5 4.9v9.8L32 42l-8.5-4.8v-9.8z', flame: 'M32 42c-6-3-6.5-9.5 0-19 1 6 7 7.5 5.5 13.5-.8 3-2.8 5-5.5 5.5z',
+  eye: 'M21.5 32q10.5-10 21 0-10.5 10-21 0zM32 32m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0', down: 'M32 22.5v17M25.5 33.5l6.5 6.5 6.5-6.5',
+  diamond: 'M32 22l10 10-10 10-10-10z', compass: 'M32 21l3 11-3 11-3-11zM21 32l11-3 11 3-11 3z', dots: 'M27 27h.1M37 27h.1M32 32h.1M27 37h.1M37 37h.1', leaf: 'M24 40c0-10 6-16 16-17-1 10-7 16-16 17zM24 40l9-9',
+};
+const glyphFor = it => { const n = it.n.toLowerCase();
+  if (n.includes('chaos')) return 'spiral'; if (n.includes('exalted')) return 'crown'; if (n.includes('divine')) return 'star'; if (n.includes('regal')) return 'crown';
+  if (n.includes('alchemy')) return 'tri'; if (n.includes('augment')) return 'plus'; if (n.includes('transmut')) return 'arrows'; if (n.includes('annul')) return 'slash';
+  if (n.includes('chance')) return 'dots'; if (n.includes('cultivation')) return 'leaf'; if (n.includes('vaal')) return 'eye'; if (n.includes('jewel')) return 'hex'; if (n.includes('architect')) return 'compass';
+  if (n.includes('fractur')) return 'crack'; if (n.includes('extraction')) return 'down'; if (n.includes('artificer')) return 'diamond'; if (n.includes('sacrifice')) return 'flame'; return 'diamond'; };
+let uid = 0;
+function iconSVG(it) {
+  const h = hueOf(it), n = it.n.toLowerCase(), id = 'g' + (++uid);
+  const sat = n.includes('annul') || n.includes('mirror') ? 8 : 62;
+  const c1 = `hsl(${h} ${sat}% 68%)`, c2 = `hsl(${h} ${sat}% 40%)`, c3 = `hsl(${(h + 20) % 360} ${Math.max(sat - 10, 5)}% 12%)`;
+  const defs = `<defs><radialGradient id="${id}" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="${c1}"/><stop offset=".55" stop-color="${c2}"/><stop offset="1" stop-color="${c3}"/></radialGradient>
+    <linearGradient id="${id}m" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3e6c6"/><stop offset="1" stop-color="#8d6c3a"/></linearGradient></defs>`;
+  const metal = `url(#${id}m)`, fill = `url(#${id})`, glow = `hsl(${h} 90% 75%)`;
+  const shine = `<ellipse cx="26" cy="24" rx="6" ry="3.5" fill="#fff" opacity=".55" transform="rotate(-30 26 24)"/>`;
+  let body;
+  if (n.includes('mirror')) body = `<path d="M30 46l-2 13h8l-2-13z" fill="${metal}"/><ellipse cx="32" cy="27" rx="14" ry="18" fill="${metal}"/><ellipse cx="32" cy="27" rx="11" ry="15" fill="${fill}"/><path d="M26 18l9 14M29 16l5 7" stroke="#fff" stroke-opacity=".6" stroke-width="1.6"/>`;
+  else if (n.includes('lock')) body = `<path d="M22 30v-7a10 10 0 0 1 20 0v7" fill="none" stroke="${metal}" stroke-width="4"/><rect x="16" y="29" width="32" height="25" rx="4" fill="${fill}" stroke="${metal}" stroke-width="2"/><circle cx="32" cy="39" r="3.5" fill="#120c06"/><path d="M32 41v6" stroke="#120c06" stroke-width="3"/>`;
+  else if (n.includes('key')) body = `<circle cx="22" cy="22" r="9" fill="none" stroke="${metal}" stroke-width="4.5"/><circle cx="22" cy="22" r="3.5" fill="${fill}"/><path d="M28.5 28.5L49 49M41 41l-5 5M46 46l-5 5" stroke="${metal}" stroke-width="4.5" stroke-linecap="round"/>`;
+  else if (n.includes('shard')) body = `<path d="M30 9l11 12-4 33-11-3-4-28z" fill="${fill}" stroke="${glow}" stroke-opacity=".5"/><path d="M30 9l-3 21 10 24M27 30l14-9" stroke="#fff" stroke-opacity=".35" fill="none"/>`;
+  else if (n.includes('infuser') || n.includes('siphon') || n.includes('bauble')) body = `<rect x="27" y="8" width="10" height="6" rx="1.5" fill="${metal}"/><path d="M28 14h8v7c8 3 11 10 10 18-1.3 9-7 15-14 15s-12.7-6-14-15c-1-8 2-15 10-18z" fill="rgba(255,255,255,.08)" stroke="${metal}" stroke-width="1.6"/><path d="M19.5 38c4-2.5 8.5 1.5 13 0s8-2 12-.5c-.6 8-6.3 14.5-12.5 14.5S20 46 19.5 38z" fill="${fill}"/><ellipse cx="25" cy="27" rx="2" ry="5" fill="#fff" opacity=".35"/>`;
+  else if (n.includes('scrap')) body = `<path d="M14 22l14-8 22 6 2 22-16 10-20-6z" fill="${metal}"/><path d="M18 24l11-6 18 5 1.5 17-13 8-16-5z" fill="${fill}"/><circle cx="21" cy="27" r="1.6" fill="#f3e6c6"/><circle cx="44" cy="25" r="1.6" fill="#f3e6c6"/><circle cx="43" cy="41" r="1.6" fill="#f3e6c6"/><circle cx="23" cy="43" r="1.6" fill="#f3e6c6"/>`;
+  else if (n.includes('whetstone')) body = `<rect x="10" y="25" width="44" height="15" rx="5" transform="rotate(-25 32 32)" fill="${fill}" stroke="${metal}" stroke-width="1.5"/><path d="M17 37l28-13" stroke="#fff" stroke-opacity=".35" stroke-width="1.5" />`;
+  else if (n.includes('prism')) body = `<path d="M32 10l18 36H14z" fill="${fill}" stroke="${glow}" stroke-opacity=".6"/><path d="M32 10l-6 36M32 10l7 36" stroke="#fff" stroke-opacity=".3"/><path d="M4 30l20 2M44 33l16-6M44 35l16 0M44 37l16 6" stroke="${glow}" stroke-width="1.5" stroke-opacity=".8"/>`;
+  else if (n.includes('corruption')) body = `<path d="M22 54l-4-22 8-14 6 16z" fill="${fill}"/><path d="M30 54l1-34 8-12 7 22-4 24z" fill="${fill}" stroke="${glow}" stroke-opacity=".5"/><path d="M42 54l2-16 9-8 1 18z" fill="${fill}"/><path d="M31 20l8-12M39 8l-1 30" stroke="#fff" stroke-opacity=".35"/>`;
+  else if (n.includes('etcher')) body = `<rect x="27" y="6" width="10" height="26" rx="3" fill="${fill}" stroke="${metal}" stroke-width="1.5"/><path d="M26 32h12l-2 16-4 8-4-8z" fill="${metal}"/><path d="M29 12h6M29 18h6" stroke="#000" stroke-opacity=".3"/>`;
+  else if (n.includes('scroll')) body = `<rect x="16" y="16" width="32" height="32" rx="2" fill="#d9c79c"/><rect x="12" y="12" width="40" height="7" rx="3.5" fill="${metal}"/><rect x="12" y="45" width="40" height="7" rx="3.5" fill="${metal}"/><path d="M21 26h22M21 31h18M21 36h20" stroke="#6b5332" stroke-width="1.5"/>`;
+  else {
+    const ringN = n.startsWith('perfect') ? 2 : n.startsWith('greater') ? 1 : 0;
+    const rings = Array.from({ length: ringN }, (_, i) => `<ellipse cx="32" cy="32" rx="${27 - i * 3.5}" ry="${8 - i * 1.5}" fill="none" stroke="${glow}" stroke-opacity="${.75 - i * .2}" stroke-width="1.6" transform="rotate(${-22 + i * 44} 32 32)"/>`).join('');
+    const lesser = n.startsWith('lesser') ? `<circle cx="32" cy="32" r="23" fill="none" stroke="${glow}" stroke-opacity=".5" stroke-dasharray="2 4"/>` : '';
+    const crack = n.includes('destabil') ? `<path d="M22 22l8 9-3 6 9 8M40 18l-6 10 8 6" stroke="${glow}" stroke-width="1.6" fill="none"/>` : '';
+    const g = n.includes('destabil') ? '' : `<path d="${GLYPH[glyphFor(it)]}" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+    body = `<circle cx="32" cy="32" r="21" fill="${glow}" opacity=".18"/><circle cx="32" cy="32" r="18" fill="${fill}"/>${g}${crack}${shine}${rings}${lesser}`;
+  }
+  return `<svg viewBox="0 0 64 64" aria-hidden="true">${defs}${body}</svg>`;
+}
+
+
+// Echtes Item-Bild, bei Fehler unser eigenes Icon
+function iconHTML(it) { return it.i ? `<img class="icon-img" src="${esc(it.i)}" alt="" decoding="async" data-k="${esc(it.k)}">` : iconSVG(it); }
+function wireIcons() {
+  $$('img.icon-img').forEach(img => {
+    if (img.dataset.w) return; img.dataset.w = '1';
+    const fail = () => { const it = BYKEY.get(img.dataset.k) || (game && game.item.k === img.dataset.k ? game.item : null); if (it && img.isConnected) img.outerHTML = iconSVG(it); };
+    if (img.complete && img.naturalWidth === 0) fail(); else img.addEventListener('error', fail, { once: true });
+  });
+}
+const typeLine = it => it.u ? `${catName(it.c)}${it.b ? ' · ' + it.b : ''}` : catName(it.c);
+
+(function embers() {
+  const cv = $('#embers'), cx = cv.getContext && cv.getContext('2d');
+  if (!cx || reduced) return;
+  let W, H, ps = [], raf = 0;
+  const rs = () => { W = cv.width = innerWidth * devicePixelRatio; H = cv.height = innerHeight * devicePixelRatio; };
+  rs(); addEventListener('resize', rs);
+  const spawn = y => ({ x: Math.random() * W, y: y ?? H + 10, r: (Math.random() * 1.6 + .6) * devicePixelRatio, v: (Math.random() * .35 + .15) * devicePixelRatio, w: Math.random() * 6.28, a: Math.random() * .5 + .2 });
+  for (let i = 0; i < 34; i++) ps.push(spawn(Math.random() * H));
+  const tick = () => {
+    cx.clearRect(0, 0, W, H);
+    for (const p of ps) {
+      p.y -= p.v; p.w += .02; p.x += Math.sin(p.w) * .3 * devicePixelRatio;
+      if (p.y < -10) Object.assign(p, spawn());
+      const fade = Math.min(1, p.y / H * 1.6);
+      cx.beginPath(); cx.arc(p.x, p.y, p.r, 0, 6.28); cx.fillStyle = `rgba(255,${140 + (p.r * 20 | 0)},60,${p.a * fade})`; cx.fill();
+    }
+    raf = requestAnimationFrame(tick);
+  };
+  tick();
+  document.addEventListener('visibilitychange', () => { cancelAnimationFrame(raf); if (document.visibilityState === 'visible') tick(); });
+})();
+
+// ---------- Kleinkram ----------
+const UP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
+const DOWN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>';
+const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="var(--win)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const CORNERS = '<span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>';
+$('#help-btn').onclick = () => { const d = $('#help'); d.open = true; d.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' }); };
+const siteUrl = () => (location.protocol === 'https:' && !/claude|anthropic|usercontent/.test(location.hostname)) ? '\n' + location.origin + location.pathname.replace(/index\.html$/, '') : '';
+async function copy(text, toastEl, preEl) {
+  try { await navigator.clipboard.writeText(text); toastEl.textContent = t('copied'); }
+  catch { if (preEl) { const r = document.createRange(); r.selectNodeContents(preEl); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } toastEl.textContent = t('copyFail'); }
+}
+function countUp(el, target) {
+  if (reduced) { el.textContent = fmtPrice(target); return; }
+  const from = Math.max(.5, target / 60), t0 = performance.now(), dur = 900;
+  const step = now => { const k = Math.min(1, (now - t0) / dur), e = 1 - (1 - k) ** 3; el.textContent = fmtPrice(Math.exp(Math.log(from) + (Math.log(target) - Math.log(from)) * e)); if (k < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+
+// ---------- Tagesrätsel ----------
+const MAXG = 6, LMIN = Math.log10(0.5), LMAX = Math.log10(3e6);
+const pos = ex => Math.min(100, Math.max(0, (Math.log10(ex) - LMIN) / (LMAX - LMIN) * 100));
+function fit(guess, real) { const r = Math.max(guess, real) / Math.min(guess, real); return r <= 1.2 ? 'win' : r <= 2 ? 'hot' : r <= 5 ? 'warm' : 'cold'; }
+const FIT_EMO = { win: '🟩', hot: '🟨', warm: '🟧', cold: '⬛' };
+const FIT_COL = { win: 'var(--win)', hot: 'var(--hot)', warm: 'var(--warm)', cold: 'var(--ink-3)' };
+let game = null, unit = 'ex', mode = 'daily', timer = 0, lastLen = -1, lastTry = 0;
+
+const dayKey = () => `${D.slug}|${D.daily.date}`;
+function newGame(practice) {
+  if (!practice && D.daily && D.daily.item) {
+    const it = { ...D.daily.item, ex: D.daily.item.e }, saved = store.days[dayKey()];
+    game = { practice: false, key: dayKey(), no: D.daily.no, date: D.daily.date, item: it, guesses: saved && saved.k === it.k ? saved.g.slice() : [] };
+  } else {
+    let it; do { it = PRACTICE[Math.floor(Math.random() * PRACTICE.length)]; } while (game && PRACTICE.length > 1 && it.k === game.item.k);
+    game = { practice: true, item: it, guesses: [] };
+  }
+  lastLen = game.guesses.length;
+}
+const won = () => game.guesses.some(g => fit(g, game.item.ex) === 'win');
+const done = () => won() || game.guesses.length >= MAXG;
+function bounds() { let lo = 0.5, hi = 3e6; for (const g of game.guesses) { if (game.item.ex > g) lo = Math.max(lo, g); else hi = Math.min(hi, g); } return [lo, hi]; }
+const volLevel = it => it.u ? (it.v >= 500 ? 5 : it.v >= 200 ? 4 : it.v >= 80 ? 3 : it.v >= 30 ? 2 : 1) : (it.v >= 5000 ? 5 : it.v >= 1000 ? 4 : it.v >= 200 ? 3 : it.v >= 30 ? 2 : 1);
+
+function stats() {
+  const pre = D.slug + '|';
+  const ks = Object.keys(store.days).filter(k => k.startsWith(pre) && store.days[k].res).sort();
+  const dist = [0, 0, 0, 0, 0, 0, 0]; let wins = 0, best = 0, run = 0, prev = null;
+  const dn = k => Math.round(Date.parse(k.slice(pre.length) + 'T00:00:00Z') / 864e5);
+  ks.forEach(k => {
+    const r = store.days[k].res;
+    if (r.won) { wins++; dist[r.n - 1]++; } else dist[6]++;
+    run = !r.won ? 0 : (prev !== null && dn(k) - dn(prev) === 1 && run > 0) ? run + 1 : 1;
+    best = Math.max(best, run); prev = k;
+  });
+  const cur = prev && Math.round(Date.parse(utcKey() + 'T00:00:00Z') / 864e5) - dn(prev) <= 1 ? run : 0;
+  return { played: ks.length, winPct: ks.length ? Math.round(wins / ks.length * 100) : 0, cur, best, dist };
+}
+
+function renderDaily() {
+  clearInterval(timer);
+  const it = game.item, real = it.ex, g = game.guesses, fin = done(), [lo, hi] = bounds();
+  const fresh = g.length > lastLen; lastLen = g.length;
+  const marks = g.map(x => `<span class="mark" style="left:${pos(x)}%;background:${FIT_COL[fit(x, real)]}"></span>`).join('') + (fin ? `<span class="mark real" style="left:${pos(real)}%"></span>` : '');
+  const ticks = [[0.5, `${nf(0.5, 1)} Ex`], [10, '10 Ex'], [EXD, '1 Div'], [20 * EXD, '20 Div'], [1000 * EXD, `${nf(1000, 0)} Div`]].map(([v, l]) => `<span style="left:${pos(v)}%">${l}</span>`).join('');
+  const rangeTxt = t('range', { lo: fmtPrice(lo), hi: fmtPrice(hi) });
+  const rows = Array.from({ length: MAXG }, (_, i) => {
+    const x = g[i];
+    if (x == null) return `<div class="row empty"><span class="n">${i + 1}</span><span class="v">·</span><span></span><span></span></div>`;
+    const f = fit(x, real), dir = f === 'win' ? 'win' : real > x ? 'up' : 'down';
+    return `<div class="row ${fresh && i === g.length - 1 ? 'new' : ''}"><span class="n">${i + 1}</span><span class="v">${esc(fmtPrice(x))}</span><span class="pill ${f}">${esc(L().fit[f])}</span>
+      <span class="arrow" aria-label="${esc(dir === 'win' ? t('correct') : dir === 'up' ? t('higher') : t('lower'))}">${dir === 'win' ? CHECK : dir === 'up' ? UP : DOWN}</span></div>`;
+  }).join('');
+  const wrong = g.filter(x => fit(x, real) !== 'win').length;
+  let hints = '';
+  if (wrong >= 2) { const lv = volLevel(it); hints += `<div class="hint"><span class="meter" aria-hidden="true">${[1, 2, 3, 4, 5].map(i => `<i class="${i <= lv ? 'on' : ''}" style="height:${6 + i * 3}px"></i>`).join('')}</span><div><b>${esc(it.u ? t('hintList') : t('hintVol'))}</b><p>${esc(L().vol[lv - 1])}</p></div></div>`; }
+  if (wrong >= 4 && !fin) { const tr = tierOf(real); hints += `<div class="hint"><span class="tierdot" style="color:${TIER_COL[tr]}" aria-hidden="true"></span><div><b>${esc(t('hintTier'))}</b><p>${esc(t('tierLine', { t: tr, name: tierName(tr), range: tierRange(tr) }))}</p></div></div>`; }
+
+  const head = `<div class="item"><div class="slot">${iconHTML(it)}</div><div class="item-meta"><span class="eyebrow">${esc(game.practice ? t('practice') : t('dailyNo', { n: game.no }))}</span>
+    <h2 class="item-name ${it.u ? 'unique' : ''}" lang="en">${esc(it.n)}</h2><span class="item-type">${esc(typeLine(it))}</span></div></div>`;
+  let body;
+  if (!fin) {
+    body = `<p class="ask">${esc(t('ask'))}</p>
+      <form class="guess" id="gf" autocomplete="off" novalidate>
+        <div class="in-row"><label for="gnum" class="sr">${esc(t('price'))}</label><input class="num" id="gnum" inputmode="decimal" placeholder="${esc(t('placeholder'))}" aria-describedby="gerr">
+          <div class="unit" role="group" aria-label="${esc(t('unit'))}"><button type="button" data-u="ex" aria-pressed="${unit === 'ex'}">Ex</button><button type="button" data-u="div" aria-pressed="${unit === 'div'}">Div</button></div></div>
+        <label for="gsl" class="sr">${esc(t('slider'))}</label><input type="range" id="gsl" min="0" max="1000" step="1" value="${slFromEx(Math.sqrt(lo * hi))}">
+        <button class="btn" type="submit">${esc(t('guessBtn', { n: g.length + 1, m: MAXG }))}</button>
+      </form><div class="err" id="gerr" aria-live="polite"></div>`;
+  } else {
+    const w = won(), n = g.length, tr = tierOf(real);
+    let st = '';
+    if (!game.practice) {
+      const S = stats(), mx = Math.max(1, ...S.dist), mine = w ? n - 1 : 6;
+      st = `<div class="stats"><div class="stat"><b>${S.played}</b><span>${esc(t('played'))}</span></div><div class="stat"><b>${S.winPct}</b><span>${esc(t('solvedPct'))}</span></div><div class="stat"><b>${S.cur}</b><span>${esc(t('streak'))}</span></div><div class="stat"><b>${S.best}</b><span>${esc(t('bestStreak'))}</span></div></div>
+        <div class="dist" aria-label="${esc(t('dist'))}">${S.dist.map((c, i) => `<div class="dist-row"><span>${i < 6 ? i + 1 : 'X'}</span><span class="dist-bar ${i === mine ? 'me' : ''}" style="width:${Math.max(8, c / mx * 100)}%">${c}</span></div>`).join('')}</div>`;
+    }
+    body = `<div class="result">
+      <div class="verdict">${esc(w ? (n === 1 ? t('verdict1') : t('verdictN', { n, m: MAXG })) : t('verdictX'))}</div>
+      <div class="reveal"><span class="label">${esc(t('actual'))}</span><span class="big" id="realp">${esc(fmtPrice(real))}</span><span class="small">${esc(fmtAlt(real))}</span></div>
+      <span class="tierchip" style="color:${TIER_COL[tr]}">${esc(t('tierChip', { t: tr, name: tierName(tr) }))}</span>
+      <pre class="share" id="share">${esc(shareText())}</pre>
+      <div class="btns"><button class="btn" id="copy">${esc(t('copy'))}</button><button class="btn ghost" id="again">${esc(t('practice'))}</button></div>
+      <div class="toast" id="toast" aria-live="polite"></div>
+      ${game.practice ? '' : '<p class="next" id="next"></p>'}
+      ${st}
+    </div>`;
+  }
+  const noDaily = !D.daily || !D.daily.item;
+  $('#main').innerHTML = `${noDaily && game.practice ? `<p class="notice">${esc(t('noDaily'))}</p>` : ''}
+  <section class="frame">${CORNERS}<div class="inner">
+    ${head}
+    <div class="scale"><div class="track" role="img" aria-label="${esc(t('scale') + '. ' + rangeTxt)}">
+      <span class="band" style="left:${pos(lo)}%;width:${Math.max(.8, pos(hi) - pos(lo))}%"></span>${marks}</div>
+      <div class="ticks">${ticks}</div>
+      ${!fin && g.length ? `<p class="cap">${esc(rangeTxt)}</p>` : ''}</div>
+    ${hints}${body}
+    <div class="rows">${rows}</div>
+  </div></section>`;
+  wireIcons();
+  if (!fin) { wireGuess(); return; }
+  if (fresh) countUp($('#realp'), real);
+  $('#copy').onclick = () => copy(shareText(), $('#toast'), $('#share'));
+  $('#again').onclick = () => { newGame(true); renderDaily(); };
+  if (!game.practice) {
+    const nx = $('#next');
+    const upd = () => {
+      if (utcKey() > game.date) {
+        nx.textContent = t('preparing');
+        if (Date.now() - lastTry > 120000 && document.visibilityState === 'visible') { lastTry = Date.now(); switchLeague(D.slug, true); }
+        return;
+      }
+      const now = new Date(), s = Math.max(0, (Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1) - now) / 1000 | 0);
+      nx.innerHTML = esc(t('nextIn', { t: '\u0000' })).replace('\u0000', `<b>${pad(s / 3600 | 0)}:${pad(s / 60 % 60 | 0)}:${pad(s % 60)}</b>`);
+    };
+    upd(); timer = setInterval(upd, 1000);
+  }
+}
+const slFromEx = ex => Math.round((Math.log10(ex) - LMIN) / (LMAX - LMIN) * 1000);
+const exFromSl = v => 10 ** (LMIN + v / 1000 * (LMAX - LMIN));
+function nice(v) { const p = 10 ** Math.floor(Math.log10(v) - 1); return Math.round(v / p) * p; }
+function wireGuess() {
+  const f = $('#gf'), inp = $('#gnum'), err = $('#gerr'), sl = $('#gsl');
+  const fmtIn = ex => (unit === 'div' ? nf(nice(ex / EXD), 2) : nf(nice(ex), ex < 1 ? 2 : 1)).replace(/[  ]/g, ' ');
+  const setUnit = u => { unit = u; $$('.unit button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.u === u))); };
+  $$('.unit button').forEach(b => b.onclick = () => { const cur = parse(inp.value); if (cur) { const ex = unit === 'div' ? cur * EXD : cur; setUnit(b.dataset.u); inp.value = fmtIn(ex); } else setUnit(b.dataset.u); inp.focus(); });
+  sl.oninput = () => { const ex = exFromSl(+sl.value); setUnit(ex >= EXD ? 'div' : 'ex'); inp.value = fmtIn(ex); err.textContent = ''; };
+  inp.oninput = () => { const v = parse(inp.value); if (v) sl.value = slFromEx(Math.min(3e6, Math.max(.5, unit === 'div' ? v * EXD : v))); };
+  if (matchMedia('(pointer:fine)').matches) inp.focus({ preventScroll: true });
+  f.onsubmit = e => {
+    e.preventDefault();
+    const v = parse(inp.value);
+    if (!v) { err.textContent = t('errNum'); return; }
+    game.guesses.push(unit === 'div' ? v * EXD : v);
+    if (!game.practice) {
+      store.days[game.key] = { k: game.item.k, g: game.guesses.slice() };
+      if (done()) store.days[game.key].res = { won: won(), n: game.guesses.length };
+      save();
+    }
+    renderDaily();
+  };
+}
+function shareText() {
+  const real = game.item.ex, w = won();
+  const lines = game.guesses.map(x => { const f = fit(x, real); return FIT_EMO[f] + (f === 'win' ? '✅' : real > x ? '⬆️' : '⬇️'); });
+  return `${game.practice ? t('sharePractice') : t('shareNo', { n: game.no })} · ${D.league}\n${w ? game.guesses.length : 'X'}/${MAXG} ${lines.join(' ')}${siteUrl()}`;
+}
+
+// ---------- Höher oder tiefer ----------
+let hl = null;
+function pickNext(a) {
+  for (let i = 0; i < 300; i++) { const b = POOL[Math.floor(Math.random() * POOL.length)]; if (b !== a && Math.max(a.ex, b.ex) / Math.min(a.ex, b.ex) >= 1.25) return b; }
+  return POOL.find(b => b !== a);
+}
+function newHl() { const a = POOL[Math.floor(Math.random() * POOL.length)]; hl = { a, b: pickNext(a), streak: 0, over: false, reveal: false }; }
+const bestHl = () => store.best[D.slug] || 0;
+function renderHl() {
+  clearInterval(timer);
+  const { a, b } = hl;
+  const card = (it, show, id, isB) => `<section class="frame card" id="${id}">${CORNERS}
+    <div class="slot">${iconHTML(it)}</div><h3 class="item-name ${it.u ? 'unique' : ''}" lang="en">${esc(it.n)}</h3><span class="item-type" style="font-size:13px">${esc(typeLine(it))}</span>
+    ${show ? `<div class="price"><span ${isB ? 'id="bp"' : ''}>${esc(fmtPrice(it.ex))}</span><small>${esc(fmtAlt(it.ex))}</small></div>` : `<div class="q" aria-label="${esc(t('hidden'))}">?</div>`}
+  </section>`;
+  const ctrl = hl.over
+    ? `<section class="frame">${CORNERS}<div class="inner result">
+        <div class="verdict">${esc(t('over', { n: hl.streak }))}</div>
+        <p class="cap">${esc(t(b.ex > a.ex ? 'cmpMore' : 'cmpLess', { a: a.n, b: b.n }))}</p>
+        <pre class="share" id="share">${esc(hlShare())}</pre>
+        <div class="btns"><button class="btn" id="hl-copy">${esc(t('copy'))}</button><button class="btn ghost" id="hl-new">${esc(t('newRound'))}</button></div>
+        <div class="toast" id="toast" aria-live="polite"></div></div></section>`
+    : hl.reveal ? '<div style="min-height:50px" aria-hidden="true"></div>'
+    : `<div class="hl-btns"><button class="btn" id="hl-up">${esc(t('more'))}</button><button class="btn ghost" id="hl-down">${esc(t('less'))}</button></div>`;
+  const q = esc(t('question', { name: '\u0000' })).replace('\u0000', `<span lang="en" style="color:${b.u ? 'var(--unique)' : 'var(--currency)'}">${esc(b.n)}</span>`);
+  $('#main').innerHTML = `<div style="display:grid;gap:14px">
+    <div class="hl-top"><span>${esc(t('streak'))}<b>${hl.streak}</b></span><span>${esc(t('best'))}<b>${bestHl()}</b></span></div>
+    <div class="duel">${card(a, true, 'ca', false)}<span class="vs" aria-hidden="true">VS</span>${card(b, hl.reveal || hl.over, 'cb', true)}</div>
+    <p class="ask" style="font-size:16px">${hl.over ? '' : q}</p>
+    ${ctrl}</div>`;
+  wireIcons();
+  if (hl.over) { $('#hl-copy').onclick = () => copy(hlShare(), $('#toast'), $('#share')); $('#hl-new').onclick = () => { newHl(); renderHl(); }; return; }
+  if (hl.reveal) return;
+  $('#hl-up').onclick = () => answerHl(true); $('#hl-down').onclick = () => answerHl(false);
+}
+function answerHl(up) {
+  const ok = up === (hl.b.ex > hl.a.ex);
+  hl.reveal = true;
+  if (ok) { hl.streak++; if (hl.streak > bestHl()) { store.best[D.slug] = hl.streak; save(); } }
+  renderHl();
+  const bp = $('#bp'); if (bp) countUp(bp, hl.b.ex);
+  $('#cb').classList.add(ok ? 'flash-ok' : 'flash-no');
+  const slug = D.slug;
+  setTimeout(() => {
+    if (!hl || D.slug !== slug) return;
+    if (ok) { hl.a = hl.b; hl.b = pickNext(hl.a); hl.reveal = false; } else hl.over = true;
+    if (mode === 'hl') renderHl();
+  }, reduced ? 700 : 1500);
+}
+function hlShare() { return `Exaltle · ${t('hl')} · ${D.league}\n${t('streak')} ${hl.streak}: ${'🟩'.repeat(Math.min(hl.streak, 12))}${hl.streak > 12 ? '…' : ''}🟥${siteUrl()}`; }
+
+// ---------- Laden & Ligen ----------
+async function getJSON(url) { const r = await fetch(url, { cache: 'no-cache' }); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }
+let lastError = null;
+function showError(key) {
+  lastError = key;
+  $('#main').innerHTML = `<section class="frame">${CORNERS}<div class="inner" style="justify-items:center;text-align:center"><p>${esc(t(key))}</p><button class="btn ghost" id="retry">${esc(t('retry'))}</button></div></section>`;
+  $('#retry').onclick = init;
+}
+function setData(d) {
+  D = d; EXD = d.exPerDiv || 1;
+  ITEMS = (d.items || []).filter(i => i && i.e > 0).map(i => ({ ...i, ex: i.e }));
+  BYKEY = new Map(ITEMS.map(i => [i.k, i]));
+  POOL = ITEMS;
+  PRACTICE = ITEMS.filter(i => i.ex >= 3 && (i.u ? i.v >= 20 : i.v >= 5));
+  if (PRACTICE.length < 10) PRACTICE = ITEMS;
+  const up = d.updated ? new Date(d.updated) : null;
+  $('#stamp').textContent = up && !isNaN(up) ? t('stamp', { t: up.toLocaleString(LOCALE[LANG], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) }) : '';
+  $('#src').textContent = t('src', { l: d.league, n: nf(EXD, 0) });
+}
+function rerender() {
+  if (lastError) { showError(lastError); return; }
+  if (!D) return;
+  if (mode === 'hl' && hl) renderHl();
+  else if (game) { lastLen = game.guesses.length; renderDaily(); }
+}
+async function switchLeague(slug, quiet) {
+  if (!quiet) $('#main').innerHTML = `<section class="frame">${CORNERS}<div class="inner"><span class="thinking">${esc(t('loadingLeague'))}</span></div></section>`;
+  let d;
+  try { d = await getJSON(`data/${encodeURIComponent(slug)}.json`); }
+  catch { if (!quiet) showError('errLeague'); return; }
+  if (!d.items || !d.items.length) { if (!quiet) showError('errNoPrices'); return; }
+  lastError = null;
+  const sameDay = quiet && D && D.slug === d.slug && D.daily && d.daily && D.daily.date === d.daily.date;
+  setData(d);
+  store.league = slug; save();
+  if (sameDay) return;
+  game = null; hl = null; setMode(mode);
+}
+async function init() {
+  try { LEAGUES = await getJSON('data/leagues.json'); }
+  catch { showError('errLoad'); return; }
+  const list = (LEAGUES && LEAGUES.leagues) || [];
+  if (!list.length) { showError('errEmpty'); return; }
+  const sel = $('#league');
+  sel.innerHTML = list.map(l => `<option value="${esc(l.slug)}">${esc(l.name)}</option>`).join('');
+  sel.disabled = false;
+  const slug = list.some(l => l.slug === store.league) ? store.league : (LEAGUES.default || list[0].slug);
+  sel.value = slug;
+  sel.onchange = () => switchLeague(sel.value);
+  await switchLeague(slug);
+}
+
+// ---------- Modus ----------
+function setMode(m) {
+  mode = m; $('#m-daily').setAttribute('aria-pressed', String(m === 'daily')); $('#m-hl').setAttribute('aria-pressed', String(m === 'hl'));
+  if (!D) return;
+  if (m === 'hl') { if (!hl) newHl(); renderHl(); }
+  else { if (!game || game.practice) newGame(false); renderDaily(); }
+}
+$('#m-daily').onclick = () => setMode('daily');
+$('#m-hl').onclick = () => setMode('hl');
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && D && D.daily && utcKey() > D.daily.date) switchLeague(D.slug, true);
+});
+init();
+})();
+
+</script>
+</body>
+</html>
